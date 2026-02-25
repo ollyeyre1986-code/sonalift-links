@@ -1,5 +1,15 @@
 export const DESTINATION_URL = 'https://www.saffordmazda.com';
 export const CAMPAIGN_NAME = 'safford-mazda-reactivation';
+export const SUPPORTED_SLUGS = [
+  'sm-e1',
+  'sm-e2',
+  'sm-e3',
+  'sm-e4',
+  'sm-s1',
+  'sm-s2',
+  'sm-s3',
+  'sm-s4'
+] as const;
 
 export type Channel = 'email' | 'sms';
 
