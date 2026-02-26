@@ -9,6 +9,11 @@ export type ClickLogPayload = {
   client_code: ParsedSlug['client_code'];
   ip: string | null;
   user_agent: string | null;
+  lead_id: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
 };
 
 export async function insertClickLog(supabase: SupabaseClient, payload: ClickLogPayload): Promise<void> {
@@ -18,7 +23,12 @@ export async function insertClickLog(supabase: SupabaseClient, payload: ClickLog
     touchpoint: payload.touchpoint,
     client_code: payload.client_code,
     ip: payload.ip,
-    user_agent: payload.user_agent
+    user_agent: payload.user_agent,
+    lead_id: payload.lead_id,
+    utm_source: payload.utm_source,
+    utm_medium: payload.utm_medium,
+    utm_campaign: payload.utm_campaign,
+    utm_content: payload.utm_content
   });
 
   if (error) {

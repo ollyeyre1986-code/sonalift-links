@@ -20,6 +20,11 @@ function getRequestIp(request: Request): string | null {
   return realIp || null;
 }
 
+function getOptionalQueryParam(url: URL, key: string): string | null {
+  const value = url.searchParams.get(key)?.trim();
+  return value || null;
+}
+
 function buildRedirectUrl(slug: string, channel: 'email' | 'sms'): string {
   const url = new URL(DESTINATION_URL);
   url.searchParams.set('utm_source', 'sonalift');
@@ -35,6 +40,7 @@ export async function GET(request: Request, context: { params: { slug: string } 
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  const requestUrl = new URL(request.url);
   const supabase = getSupabaseAdminClient();
 
   if (!supabase) {
@@ -47,7 +53,12 @@ export async function GET(request: Request, context: { params: { slug: string } 
         touchpoint: parsed.touchpoint,
         client_code: parsed.client_code,
         ip: getRequestIp(request),
-        user_agent: request.headers.get('user-agent')
+        user_agent: request.headers.get('user-agent'),
+        lead_id: getOptionalQueryParam(requestUrl, 'lead_id'),
+        utm_source: getOptionalQueryParam(requestUrl, 'utm_source'),
+        utm_medium: getOptionalQueryParam(requestUrl, 'utm_medium'),
+        utm_campaign: getOptionalQueryParam(requestUrl, 'utm_campaign'),
+        utm_content: getOptionalQueryParam(requestUrl, 'utm_content')
       });
     } catch (error) {
       console.error('Failed to log click:', error);
