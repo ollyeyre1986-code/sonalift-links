@@ -1,5 +1,9 @@
-export const DESTINATION_URL = 'https://www.saffordmazda.com';
-export const CAMPAIGN_NAME = 'safford-mazda-reactivation';
+export type Channel = 'email' | 'sms';
+
+export const DESTINATION_URLS: Record<Channel, string> = {
+  email: 'https://www.saffordmazdaalexandria.com/service/schedule-service/?utm_source=SonaLift&utm_medium=Email&utm_campaign=Service',
+  sms: 'https://www.saffordmazdaalexandria.com/service/schedule-service/?utm_source=SonaLift&utm_medium=SMS&utm_campaign=Service',
+};
 export const SUPPORTED_SLUGS = [
   'sm-e1',
   'sm-e2',
@@ -10,8 +14,6 @@ export const SUPPORTED_SLUGS = [
   'sm-s3',
   'sm-s4'
 ] as const;
-
-export type Channel = 'email' | 'sms';
 
 export type ParsedSlug = {
   slug: string;

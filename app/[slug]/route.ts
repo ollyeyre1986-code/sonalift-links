@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { CAMPAIGN_NAME, DESTINATION_URL, parseRedirectSlug } from '@/src/lib/redirect-config';
+import { DESTINATION_URLS, parseRedirectSlug } from '@/src/lib/redirect-config';
 import { insertClickLog } from '@/src/lib/log-click';
 import { getSupabaseAdminClient } from '@/src/lib/supabase-admin';
 
@@ -25,13 +25,8 @@ function getOptionalQueryParam(url: URL, key: string): string | null {
   return value || null;
 }
 
-function buildRedirectUrl(slug: string, channel: 'email' | 'sms'): string {
-  const url = new URL(DESTINATION_URL);
-  url.searchParams.set('utm_source', 'sonalift');
-  url.searchParams.set('utm_medium', channel);
-  url.searchParams.set('utm_campaign', CAMPAIGN_NAME);
-  url.searchParams.set('utm_content', slug);
-  return url.toString();
+function buildRedirectUrl(channel: 'email' | 'sms'): string {
+  return DESTINATION_URLS[channel];
 }
 
 export async function GET(request: Request, context: { params: { slug: string } }) {
@@ -66,6 +61,6 @@ export async function GET(request: Request, context: { params: { slug: string } 
     }
   }
 
-  const redirectUrl = buildRedirectUrl(parsed.slug, parsed.channel);
+  const redirectUrl = buildRedirectUrl(parsed.channel);
   return NextResponse.redirect(redirectUrl, { status: 307 });
 }
