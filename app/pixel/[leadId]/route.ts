@@ -63,27 +63,40 @@ async function logOpen({
     return;
   }
 
-  // Deduplicate on lead_id + touchpoint + source=pixel
+  // Look up resend_message_id from sequence_status
+  let messageId: string | null = null;
   if (touchpoint !== null) {
-    const { data: existing } = await supabase
-      .from('email_events')
-      .select('id')
+    const { data: seqStatus } = await supabase
+      .from('sequence_status')
+      .select('resend_message_id')
       .eq('lead_id', leadId)
-      .eq('event_type', 'email.opened')
-      .eq('touchpoint', touchpoint)
-      .eq('source', 'pixel')
+      .eq('touch_number', touchpoint)
       .limit(1)
       .single();
 
-    if (existing) {
-      console.log(`[pixel] Open already recorded for lead ${leadId} tp${touchpoint}, skipping`);
-      return;
+    messageId = seqStatus?.resend_message_id || null;
+
+    // Deduplicate on message_id if available
+    if (messageId) {
+      const { data: existing } = await supabase
+        .from('email_events')
+        .select('id')
+        .eq('message_id', messageId)
+        .eq('event_type', 'email.opened')
+        .limit(1)
+        .single();
+
+      if (existing) {
+        console.log(`[pixel] Open already recorded for message ${messageId}, skipping`);
+        return;
+      }
     }
   }
 
   const { error } = await supabase.from('email_events').insert({
     lead_id: leadId,
     event_type: 'email.opened',
+    message_id: messageId,
     client_code: clientCode,
     channel,
     touchpoint,
