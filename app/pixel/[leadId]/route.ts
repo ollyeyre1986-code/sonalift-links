@@ -26,8 +26,8 @@ export async function GET(
   const channel = searchParams.get('ch') || 'email';
   const touchpoint = searchParams.get('tp');
 
-  // Fire and forget — pixel delivery is never blocked
-  logOpen({
+  // Await to prevent serverless early termination
+  await logOpen({
     leadId,
     clientCode,
     channel,
