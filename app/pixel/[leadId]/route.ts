@@ -57,16 +57,19 @@ async function logOpen({
   ip: string | null;
   userAgent: string | null;
 }) {
+  console.log('[pixel] logOpen called with:', JSON.stringify({ leadId, clientCode, channel, touchpoint, ip, userAgent }));
+
   const supabase = getSupabaseAdminClient();
   if (!supabase) {
     console.warn('[pixel] Supabase env vars missing; skipping open log.');
     return;
   }
+  console.log('[pixel] Supabase admin client obtained successfully');
 
   // Look up resend_message_id from sequence_status
   let messageId: string | null = null;
   if (touchpoint !== null) {
-    const { data: seqStatus } = await supabase
+    const { data: seqStatus, error: seqError } = await supabase
       .from('sequence_status')
       .select('resend_message_id')
       .eq('lead_id', leadId)
@@ -74,11 +77,13 @@ async function logOpen({
       .limit(1)
       .single();
 
+    console.log('[pixel] sequence_status lookup:', JSON.stringify({ seqStatus, seqError }));
+
     messageId = seqStatus?.resend_message_id || null;
 
     // Deduplicate on message_id if available
     if (messageId) {
-      const { data: existing } = await supabase
+      const { data: existing, error: dedupError } = await supabase
         .from('email_events')
         .select('id')
         .eq('message_id', messageId)
@@ -86,14 +91,18 @@ async function logOpen({
         .limit(1)
         .single();
 
+      console.log('[pixel] dedup check:', JSON.stringify({ existing, dedupError }));
+
       if (existing) {
         console.log(`[pixel] Open already recorded for message ${messageId}, skipping`);
         return;
       }
     }
+  } else {
+    console.log('[pixel] No touchpoint provided, skipping sequence_status lookup');
   }
 
-  const { error } = await supabase.from('email_events').insert({
+  const insertPayload = {
     lead_id: leadId,
     event_type: 'email.opened',
     message_id: messageId,
@@ -103,9 +112,16 @@ async function logOpen({
     ip,
     user_agent: userAgent,
     source: 'pixel',
-  });
+  };
+  console.log('[pixel] Inserting into email_events:', JSON.stringify(insertPayload));
+
+  const { data: insertData, error } = await supabase.from('email_events').insert(insertPayload).select();
+
+  console.log('[pixel] Insert result:', JSON.stringify({ insertData, error }));
 
   if (error) {
     console.error('[pixel] Supabase insert error:', error);
+  } else {
+    console.log('[pixel] Insert successful');
   }
 }
