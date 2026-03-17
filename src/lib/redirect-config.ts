@@ -23,18 +23,30 @@ export type ParsedSlug = {
 };
 
 export function parseRedirectSlug(slug: string): ParsedSlug | null {
-  const match = /^sm-([es])([1-4])$/.exec(slug);
-  if (!match) {
-    return null;
+  const legacyMatch = /^sm-([es])([1-4])$/i.exec(slug);
+  if (legacyMatch) {
+    const channelCode = legacyMatch[1]?.toLowerCase();
+    const touchpoint = Number(legacyMatch[2]) as 1 | 2 | 3 | 4;
+
+    return {
+      slug,
+      channel: channelCode === 'e' ? 'email' : 'sms',
+      touchpoint,
+      client_code: 'safford_mazda'
+    };
   }
 
-  const channelCode = match[1];
-  const touchpoint = Number(match[2]) as 1 | 2 | 3 | 4;
+  const campaignMatch = /^sfrd-[a-z0-9-]+-([1-4])$/i.exec(slug);
+  if (campaignMatch) {
+    const touchpoint = Number(campaignMatch[1]) as 1 | 2 | 3 | 4;
+    return {
+      slug,
+      // Campaign slugs do not encode channel; route can override from query string.
+      channel: 'email',
+      touchpoint,
+      client_code: 'safford_mazda'
+    };
+  }
 
-  return {
-    slug,
-    channel: channelCode === 'e' ? 'email' : 'sms',
-    touchpoint,
-    client_code: 'safford_mazda'
-  };
+  return null;
 }
