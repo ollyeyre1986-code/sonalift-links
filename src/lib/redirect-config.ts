@@ -22,7 +22,27 @@ export type ParsedSlug = {
   client_code: 'safford_mazda';
 };
 
-export function parseRedirectSlug(slug: string): ParsedSlug | null {
+export type SalesParsedSlug = {
+  slug: string;
+  channel: 'email';
+  touchpoint: 1 | 2 | 3 | 4;
+  client_code: 'safford_mazda';
+  isSales: true;
+};
+
+export function parseRedirectSlug(slug: string): ParsedSlug | SalesParsedSlug | null {
+  const salesMatch = /^sales-[a-z0-9-]+-([1-4])$/i.exec(slug);
+  if (salesMatch) {
+    const touchpoint = Number(salesMatch[1]) as 1 | 2 | 3 | 4;
+    return {
+      slug,
+      channel: 'email',
+      touchpoint,
+      client_code: 'safford_mazda',
+      isSales: true,
+    };
+  }
+
   const legacyMatch = /^sm-([es])([1-4])$/i.exec(slug);
   if (legacyMatch) {
     const channelCode = legacyMatch[1]?.toLowerCase();

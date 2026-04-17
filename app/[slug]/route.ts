@@ -62,13 +62,45 @@ export async function GET(request: Request, context: { params: { slug: string } 
   }
 
   const requestUrl = new URL(request.url);
-  const resolvedChannel = resolveChannelFromQuery(requestUrl) || parsed.channel;
-  const resolvedTouchpoint = resolveTouchpointFromQuery(requestUrl) || parsed.touchpoint;
   const supabase = getSupabaseAdminClient();
 
-  if (!supabase) {
-    console.warn('Supabase env vars are missing; skipping click log insert.');
-  } else {
+  // --- SALES REDIRECT ---
+  if ('isSales' in parsed && parsed.isSales) {
+    const destination =
+      requestUrl.searchParams.get('d') ||
+      'https://loyalty.saffordmazdaalexandria.com/cx5-appraisal';
+
+    const leadId = resolveLeadId(requestUrl);
+
+    if (supabase) {
+      try {
+        await insertClickLog(supabase, {
+          slug: parsed.slug,
+          channel: 'email',
+          touchpoint: parsed.touchpoint,
+          client_code: parsed.client_code,
+          ip: getRequestIp(request),
+          user_agent: request.headers.get('user-agent'),
+          lead_id: leadId,
+          utm_source: getOptionalQueryParam(requestUrl, 'utm_source'),
+          utm_medium: getOptionalQueryParam(requestUrl, 'utm_medium'),
+          utm_campaign: getOptionalQueryParam(requestUrl, 'utm_campaign'),
+          utm_content: getOptionalQueryParam(requestUrl, 'utm_content'),
+        });
+      } catch (error) {
+        console.error('Failed to log sales click:', error);
+        // Always redirect — never break the customer flow
+      }
+    }
+
+    return NextResponse.redirect(destination, { status: 302 });
+  }
+
+  // --- EXISTING SERVICE REDIRECT (unchanged) ---
+  const resolvedChannel = resolveChannelFromQuery(requestUrl) || parsed.channel;
+  const resolvedTouchpoint = resolveTouchpointFromQuery(requestUrl) || parsed.touchpoint;
+
+  if (supabase) {
     try {
       await insertClickLog(supabase, {
         slug: parsed.slug,
@@ -81,11 +113,10 @@ export async function GET(request: Request, context: { params: { slug: string } 
         utm_source: getOptionalQueryParam(requestUrl, 'utm_source'),
         utm_medium: getOptionalQueryParam(requestUrl, 'utm_medium'),
         utm_campaign: getOptionalQueryParam(requestUrl, 'utm_campaign'),
-        utm_content: getOptionalQueryParam(requestUrl, 'utm_content')
+        utm_content: getOptionalQueryParam(requestUrl, 'utm_content'),
       });
     } catch (error) {
       console.error('Failed to log click:', error);
-      // Continue redirecting so tracking outages do not break the user flow.
     }
   }
 
