@@ -32,6 +32,35 @@ main {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
 }
 
+.advisor-card {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.advisor-card .label {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+  margin: 0 0 0.5rem;
+}
+
+.advisor-card .name {
+  font-size: 2.5rem;
+  margin: 0 0 1.5rem;
+  font-weight: 700;
+}
+
+.advisor-card .quote {
+  font-size: 1.15rem;
+  font-style: italic;
+  color: #444;
+  border-left: none;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
 code {
   background: #f2efe6;
   padding: 0.1rem 0.35rem;
